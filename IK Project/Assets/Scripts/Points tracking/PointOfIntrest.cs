@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using IK;
 using UnityEditor.UIElements;
 using UnityEngine;
 
@@ -11,21 +12,10 @@ namespace Points_tracking
         [SerializeField] private float _rangeOfView;
         [SerializeField] private IKBase _ik;
 
-        private void Awake()
-        {
-            PointsManager.Instance.Entity_OnUpdatePoints += UpdatePoints;
-        }
 
-        
         void Update()
         {
             SearchTheNearestPoint();
-        }
-
-
-        private void UpdatePoints()
-        {
-            _points = PointsManager.Instance.PointsOfIntrest;
         }
 
         private void SearchTheNearestPoint()
@@ -38,14 +28,18 @@ namespace Points_tracking
             foreach(var point in _points)
             {
                 var distanceFromObject = Vector3.Distance(transform.position, point.transform.position);
-
-                if(distanceFromObject < theShortestDistance && distanceFromObject < _rangeOfView)
+                
+                if (distanceFromObject < theShortestDistance)
                 {
-                    _ik.Target = point;
-                    theShortestDistance = distanceFromObject;
+                    if (distanceFromObject < _rangeOfView)
+                    {
+                        _ik.Target = point;
+                        theShortestDistance = distanceFromObject;
+                    }
+                    else
+                        _ik.Target = null;
                 }
             }
         }
-
     }
 }
