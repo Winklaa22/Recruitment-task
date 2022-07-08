@@ -1,66 +1,82 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Parts;
+using Angles;
+using Bones;
+using Points_tracking;
 using UnityEngine;
 
 public class IKBase : MonoBehaviour
 {
     [SerializeField] private Transform _target;
-    private Vector3 _smoothTargetPosition;
+
+    public Transform Target
+    {
+        set
+        {
+            _target = value;
+        }
+    }
+    
+    [SerializeField, Range(0, 1)] private float _weight;
+    
+    [Header("Smooth")]
     [SerializeField]private float _smoothTime;
+    private Vector3 _smoothTargetPosition;
+    
     
     [Header("Parts of body")]
-    [SerializeField] private PartData _head;
-    [SerializeField] private PartData _neck;
-    [SerializeField] private PartData[] _spines;
+    [SerializeField] private BoneData[] _bones;
     
-
-    void LateUpdate()
-    {
-        
-        LookAt(_head, _smoothTargetPosition);
-
-        LookAt(_neck, _smoothTargetPosition);
-        LookAt(_spines[0], _smoothTargetPosition);
-    }
-
+    
     private void Update()
     {
-        _smoothTargetPosition = Vector3.Lerp(_smoothTargetPosition, _target.position, _smoothTime);
+        if (_target != null) 
+            _smoothTargetPosition = Vector3.Lerp(_smoothTargetPosition, _target.position, _smoothTime);
+    }
+    
+    void LateUpdate()
+    {
+        LookAtAll();
     }
 
-
-    private void ClampAngle(PartData part)
+    private void LookAtAll()
     {
-        var eulerAngles = part.tranformPart.eulerAngles;
-
-        if (part.xAxis.isActive)
+        foreach (var bone in _bones)
         {
-            if (part.xAxis.limitAxis)
-                eulerAngles.x = AnglesBehaviour.Clamp(eulerAngles.x, part.xAxis.min, part.xAxis.max);
+            if(_target != null)
+                LookAt(bone, _smoothTargetPosition - bone.positionOffset);
+            else
+                bone.tranformPart.rotation = Quaternion.identity;
+        }
+    }
+    
+    private void ConfigAngle(BoneData bone)
+    {
+        var eulerAngles = bone.tranformPart.eulerAngles;
+
+        if (bone.xAxis.isActive)
+        {
+            if (bone.xAxis.limitAxis)
+                eulerAngles.x = AnglesBehaviour.Clamp(eulerAngles.x, bone.xAxis.min, bone.xAxis.max) * _weight;
         }
         else
             eulerAngles.x = 0;
         
-
-        if (part.yAxis.isActive)
+        if (bone.yAxis.isActive)
         {
-            if (part.yAxis.limitAxis)
-                eulerAngles.y = AnglesBehaviour.Clamp(eulerAngles.y, part.yAxis.min, part.yAxis.max);
+            if (bone.yAxis.limitAxis)
+                eulerAngles.y = AnglesBehaviour.Clamp(eulerAngles.y, bone.yAxis.min, bone.yAxis.max) * _weight;
         }
         else
             eulerAngles.y = 0;
 
-        part.tranformPart.rotation = Quaternion.Euler(eulerAngles);
+        bone.tranformPart.rotation = Quaternion.Euler(eulerAngles);
     }
     
-    private void LookAt(PartData part, Vector3 target)  
+    private void LookAt(BoneData bone, Vector3 target)  
     {
-        var diff = target - part.tranformPart.position;
-
-        part.tranformPart.rotation = Quaternion.LookRotation(diff);
-        ClampAngle(part);
+        var diff = target - bone.tranformPart.position;
+        
+        bone.tranformPart.rotation = Quaternion.LookRotation(diff);
+        ConfigAngle(bone);
     }
     
 }

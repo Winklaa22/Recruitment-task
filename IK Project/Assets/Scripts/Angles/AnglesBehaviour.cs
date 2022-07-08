@@ -1,32 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class AnglesBehaviour
+namespace Angles
 {
-    private static float GetCorrectValues(float value)
+    public static class AnglesBehaviour
     {
-        while (value > 360)
-            value -= 360;
-        while (value < 0)
-            value += 360;
+        private static float GetCorrectValues(float value)
+        {
+            while (value > 360)
+                value -= 360;
+            while (value < 0)
+                value += 360;
         
-        if (value > 180)
-            value -= 360;
-        else if (value < -180)
-            value += 360;
+            if (value > 180)
+                value -= 360;
+            else if (value < -180)
+                value += 360;
 
-        return value;
-    }
+            return value;
+        }
     
-    public static float Clamp(float angle, float min, float max)
-    {
-        angle = GetCorrectValues(angle);
+        public static float Clamp(float angle, float min, float max)
+        {
+            angle = GetCorrectValues(angle);
 
-        min = GetCorrectValues(min);
+            min = GetCorrectValues(min);
 
-        max = GetCorrectValues(max);
+            max = GetCorrectValues(max);
         
-        return Mathf.Clamp(angle, min, max);
+            return Mathf.Clamp(angle, min, max);
+        }
     }
 }
